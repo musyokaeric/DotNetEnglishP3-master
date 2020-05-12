@@ -46,6 +46,8 @@ namespace P3AddNewFunctionalityDotNetCore.Controllers
             // product property that is not conform to its business rules. The return type of the method 
             // must be of List<string>.
 
+            _productService.CheckProductModelErrors(product);
+
             foreach (string error in modelErrors)
             {
                 ModelState.AddModelError("", error);
