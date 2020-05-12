@@ -12,7 +12,6 @@ using System.Collections.Generic;
 using System;
 using P3AddNewFunctionalityDotNetCore.Models.ViewModels;
 using P3AddNewFunctionalityDotNetCore.Models;
-using Microsoft.Extensions.Localization;
 
 namespace P3AddNewFunctionalityDotNetCore.Tests
 {
@@ -298,67 +297,11 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
         }
 
         [Fact]
-        public void TestCheckProductModelErrorsNonHappySenarioTest()
+        public void TestCheckProductModelErrors()
         {
-            //Arrange
-            List<LocalizedString> localizedStrings = new List<LocalizedString>
-            {
-                new LocalizedString("MissingName","MissingName"),
-                new LocalizedString("MissingPrice","MissingPrice"),
-                new LocalizedString("PriceNotANumber","PriceNotANumber"),
-                new LocalizedString("PriceNotGreaterThanZero","PriceNotGreaterThanZero"),
-                new LocalizedString("MissingQuantity","MissingQuantity"),
-                new LocalizedString("StockNotAnInteger","StockNotAnInteger"),
-                new LocalizedString("StockNotGreaterThanZero","StockNotGreaterThanZero"),
-            };
-            var moqStringLocaliser = new Mock<IStringLocalizer<ProductService>>();
-            foreach (var item in localizedStrings)
-            {
-                moqStringLocaliser.Setup(x => x[item.Name]).Returns(item);
-            }
-            var productService = new ProductService(null, null, null, moqStringLocaliser.Object);
-
-            //Act - missing stock
-            var product = new ProductViewModel { Id = 1, Name = " ", Stock = "20", Price = "11.05" };
-            var result = productService.CheckProductModelErrors(product);
-
-            //Assert
-            Assert.NotEmpty(result);
-            Assert.Single(result);
-            Assert.Equal("MissingName", result.First());
-
-            //Act - missing stock, price not greater than zero
-            product = new ProductViewModel { Id = 1, Name = "name", Stock = "", Price = "-11.05" };
-            result = productService.CheckProductModelErrors(product);
-
-            //Assert
-            Assert.NotEmpty(result);
-            Assert.Equal(3, result.Count);
-            Assert.NotNull(result.Find(x => x == "MissingQuantity"));
-
-            //Act - stock not greater than zero, price must be a number
-            product = new ProductViewModel { Id = 1, Name = "name", Stock = "-3", Price = "abc" };
-            result = productService.CheckProductModelErrors(product);
-
-            //Assert
-            Assert.NotEmpty(result);
-            Assert.Equal(2, result.Count);
-            Assert.NotNull(result.Find(x => x == "PriceNotANumber"));
-
-            //Act - product with null values
-            product = new ProductViewModel();
-            result = productService.CheckProductModelErrors(product);
-
-            //Assert
-            Assert.NotEmpty(result);
-            Assert.Equal(5, result.Count);
-
-            //Act -product with all required inputs
-            product = new ProductViewModel { Id = 1, Name = "name", Stock = "20", Price = "11.05" };
-            result = productService.CheckProductModelErrors(product);
-
-            //Assert
-            Assert.Empty(result);
+            //takes ProductViewModel as arguments - parametized
+            //uses IStringLocalizer - create your own
+            Assert.Equal(1, 2);
         }
 
         [Theory]
