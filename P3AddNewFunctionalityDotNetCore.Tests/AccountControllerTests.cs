@@ -87,7 +87,7 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
         }
 
         [Fact]
-        public async Task TestValidLoginAsync()
+        public async Task TestValidLoginMockTestAsync()
         {
             //Arrange
             moqUserManager.Setup(x => x.FindByNameAsync(_testLoginModel.Name)).Returns(Task.FromResult(new IdentityUser(_testLoginModel.Name)));
@@ -105,7 +105,25 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             Assert.Equal("/oneUrl", actionResult.Url);
         }
 
-        //moqSignInManager.Setup(x=>x.SignOutAsync()).Returns(Task.CompletedTask);
+        [Fact]
+        public async Task TestInValidLoginAsyncMockTest()
+        {
+            //Arrange
+            moqUserManager.Setup(x => x.FindByNameAsync(_testLoginModel.Name)).Returns(Task.FromResult(new IdentityUser(_testLoginModel.Name)));
+
+            moqSignInManager.Setup(m => m.PasswordSignInAsync(It.IsAny<IdentityUser>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>()))
+                .Returns(Task.FromResult(Microsoft.AspNetCore.Identity.SignInResult.Failed));
+
+            var accountController = new AccountController(moqUserManager.Object, moqSignInManager.Object);
+
+            //Act
+            var result = await accountController.Login(_testLoginModel);
+
+            // Assert
+            var actionResult = Assert.IsType<RedirectResult>(result);
+            Assert.Equal("/Admin/Index", actionResult.Url);
+        }
+
         [Fact]
         public async Task TestLogout()
         {
