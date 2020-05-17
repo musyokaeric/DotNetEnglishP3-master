@@ -101,8 +101,8 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             var result = await accountController.Login(_testLoginModel);
 
             // Assert
-            var actionResult = Assert.IsType<RedirectResult>(result);
-            Assert.Equal("/oneUrl", actionResult.Url);
+            var redirectResult = Assert.IsType<RedirectResult>(result);
+            Assert.Equal(_testLoginModel.ReturnUrl, redirectResult.Url);
         }
 
         [Fact]
@@ -120,8 +120,9 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             var result = await accountController.Login(_testLoginModel);
 
             // Assert
-            var actionResult = Assert.IsType<RedirectResult>(result);
-            Assert.Equal("/Admin/Index", actionResult.Url);
+            var viewResult = Assert.IsType<ViewResult>(result);
+            var model = Assert.IsType<LoginModel>(viewResult.Model);
+            Assert.Equal("/oneUrl", model.ReturnUrl);
         }
 
         [Fact]
