@@ -23,6 +23,7 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
         /// 
 
         private static List<Order> _testOrderList => GenerateOrderData();
+        private static List<Product> _testProductList => GenerateProductData();
 
         private static List<Order> GenerateOrderData()
         {
@@ -36,6 +37,16 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             return testOrdersList;
         }
 
+        private static List<Product> GenerateProductData()
+        {
+            var testProductsList = new List<Product>
+            {
+                new Product { Id = 1, Name = "one", Quantity = 15 },
+                new Product { Id = 2, Name = "two", Quantity = 20 }
+            };
+            return testProductsList;
+        }
+
         private DbContextOptions<P3Referential> TestDBContextOptionsBuilder()
         {
             return new DbContextOptionsBuilder<P3Referential>()
@@ -43,7 +54,7 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
                 .Options;
         }
 
-        private void SeedTestDb(DbContextOptions<P3Referential> options)
+        private void SeedOrdersTestDb(DbContextOptions<P3Referential> options)
         {
             using (var context = new P3Referential(options))
             {
@@ -55,6 +66,17 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             }
         }
 
+        private void SeedProductsTestDb(DbContextOptions<P3Referential> options)
+        {
+            using (var context = new P3Referential(options))
+            {
+                foreach (var item in _testProductList)
+                {
+                    context.Product.Add(item);
+                }
+                context.SaveChanges();
+            }
+        }
 
         /// <summary>
         /// ORDER SERVICE TESTS
@@ -65,11 +87,11 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
         [InlineData(2, "two")]
         [InlineData(3, "three")]
         [InlineData(4, "four")]
-        public async Task TestGetOrderByIdAsyncParametizedTestData(int id, string name)
+        public async Task TestGetOrderByIdAsyncInMemoryTestParametizedTestData(int id, string name)
         {
             //Arrange
             var option = TestDBContextOptionsBuilder();
-            SeedTestDb(option);
+            SeedOrdersTestDb(option);
 
             using (var context = new P3Referential(option))
             {
@@ -84,8 +106,29 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
                 Assert.IsType<Order>(result);
                 Assert.Equal(name, result.Name);
             }
+        }
 
-            //worst case, entering invalid id
+        [Theory]
+        [InlineData(-5)]
+        [InlineData(0)]
+        [InlineData(26)]
+        public async Task TestGetOrderBuInvalidIdAsyncInMemoryTestParametizedTestData(int id)
+        {
+            //Arrange
+            var option = TestDBContextOptionsBuilder();
+            SeedOrdersTestDb(option);
+
+            using (var context = new P3Referential(option))
+            {
+                var orderRepository = new OrderRepository(context);
+                var orderService = new OrderService(null, orderRepository, null);
+
+                //Act
+                var result = await orderService.GetOrder(id);
+
+                //Assert
+                Assert.Null(result);
+            }
         }
 
         [Fact]
@@ -93,7 +136,7 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
         {
             //Arrange
             var option = TestDBContextOptionsBuilder();
-            SeedTestDb(option);
+            SeedOrdersTestDb(option);
 
             using (var context = new P3Referential(option))
             {
@@ -113,9 +156,20 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
         }
 
         [Fact]
-        public void TestSaveOrder()
+        public void TestSaveOrderInMemoryTest()
         {
             //Arrange
+            var option = TestDBContextOptionsBuilder();
+            SeedProductsTestDb(option);
+
+            Product product1;
+            Product product2;
+
+            using (var context = new P3Referential(option))
+            {
+                product1 = context.Product.FirstOrDefault(p => p.Id == 1);
+                product2 = context.Product.FirstOrDefault(p => p.Id == 2);
+            }
             OrderViewModel _testOrderViewModel = new OrderViewModel
             {
                 OrderId = 1,
@@ -126,19 +180,23 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
                 Country = "oneCountry",
                 Lines = new List<CartLine>
                 {
-                    new CartLine{ OrderLineId = 1, Product = new Product{}, Quantity = 1},
-                    new CartLine{ OrderLineId = 1, Product = new Product{}, Quantity = 1}
+                    new CartLine{ OrderLineId = 1, Product = product1, Quantity = 3},
+                    new CartLine{ OrderLineId = 1, Product = product2 , Quantity = 8}
                 }
             };
-            var option = TestDBContextOptionsBuilder();
+            
             using (var context = new P3Referential(option))
             {
                 Cart cart = new Cart();
+                foreach (var line in _testOrderViewModel.Lines)
+                {
+                    cart.AddItem(line.Product, line.Quantity);
+                }
                 var orderReopsitory = new OrderRepository(context);
-                var moqProductService = new Mock<IProductService>();
-                moqProductService.Setup(x => x.UpdateProductQuantities());
+                var productRepository = new ProductRepository(context);
+                var productService = new ProductService(cart, productRepository, orderReopsitory, null);
 
-                var orderService = new OrderService(cart, orderReopsitory, moqProductService.Object);
+                var orderService = new OrderService(cart, orderReopsitory, productService);
 
                 //Act
                 orderService.SaveOrder(_testOrderViewModel);
@@ -150,6 +208,8 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
                 Assert.Single(result);
                 Assert.Equal("oneAddress", result.First().Address);
                 Assert.Equal(2, result.First().OrderLine.Count);
+
+                Assert.Equal(12, context.Product.FirstOrDefault(p => p.Id == 1).Quantity);
             }
         }
     }
