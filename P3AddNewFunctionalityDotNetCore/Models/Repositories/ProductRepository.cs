@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using P3AddNewFunctionalityDotNetCore.Data;
 using P3AddNewFunctionalityDotNetCore.Models.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,7 +19,14 @@ namespace P3AddNewFunctionalityDotNetCore.Models.Repositories
         public async Task<Product> GetProduct(int id)
         {
             var product = await _context.Product.SingleOrDefaultAsync(m => m.Id == id);
-            return product;
+            if (product == null)
+            {
+                throw new IndexOutOfRangeException("Invalid id requested...");
+            }
+            else
+            {
+                return product;
+            }
         }
 
         public async Task<IList<Product>> GetProduct()
@@ -40,7 +48,15 @@ namespace P3AddNewFunctionalityDotNetCore.Models.Repositories
         /// </summary>
         public void UpdateProductStocks(int id, int quantityToRemove)
         {
-            Product product = _context.Product.First(p => p.Id == id);
+            Product product = _context.Product.FirstOrDefault(p => p.Id == id);
+            if (product == null)
+            {
+                throw new IndexOutOfRangeException("Invalid id");
+            }
+            if (quantityToRemove < 1 || quantityToRemove > product.Quantity)
+            {
+                throw new InvalidOperationException("The quantity to remove should be within the number of products available");
+            }
             product.Quantity = product.Quantity - quantityToRemove;
 
             if (product.Quantity == 0)
@@ -67,11 +83,15 @@ namespace P3AddNewFunctionalityDotNetCore.Models.Repositories
 
         public void DeleteProduct(int id)
         {
-            Product product = _context.Product.First(p => p.Id == id);
+            Product product = _context.Product.FirstOrDefault(p => p.Id == id);
             if (product != null)
             {
                 _context.Product.Remove(product);
                 _context.SaveChanges();
+            }
+            else
+            {
+                throw new IndexOutOfRangeException("Invalid id");
             }
         }
     }

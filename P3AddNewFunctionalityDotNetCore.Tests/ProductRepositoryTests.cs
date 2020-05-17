@@ -12,6 +12,7 @@ using P3AddNewFunctionalityDotNetCore.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Linq;
+using System.IO;
 
 namespace P3AddNewFunctionalityDotNetCore.Tests
 {
@@ -126,10 +127,27 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             Assert.NotNull(result);
             Assert.IsType<Product>(result);
             Assert.Equal(description, result.Description);
-
-            //worst case, id that does not exist = 6, -2
         }
 
+        [Theory]
+        [InlineData(-5)]
+        [InlineData(0)]
+        [InlineData(26)]
+        public void TestGetProductInvalidIdIntegrationTestParametizedTestData(int id)
+        {
+            // Arrange
+            var productRepository = new ProductRepository(_context);
+
+            //Act
+            Product result;
+            var exception = Assert.ThrowsAsync<IndexOutOfRangeException>(async () =>
+              {
+                  result = await productRepository.GetProduct(id);
+              });
+
+            //Assert
+            Assert.Contains("Invalid id requested...", exception.Result.Message);
+        }
         [Fact]
         public async Task TestGetProductIntegrationTest()
         {
@@ -198,10 +216,83 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
 
                 context.Database.EnsureDeleted();
             }
+        }
 
-            //worst case = putting the wrong id
-            //worst case = entering a quantityToRemove to be of a higher quantity
-            //worst case = entering a nwgative quantityToRemove
+        [Theory]
+        [InlineData(-5)]
+        [InlineData(0)]
+        [InlineData(26)]
+        public void TestUpdateProductStocksInvalidIdInMemoryTest(int id)
+        {
+            // Arrange
+            var product = new Product
+            {
+                Id = 1,
+                Name = "name",
+                Description = "description",
+                Price = 12.95,
+                Quantity = 40
+            };
+            var options = TestDBContextOptionsBuilder();
+            using (var context = new P3Referential(options))
+            {
+                context.Product.Add(product);
+                context.SaveChanges();
+
+                var productRepository = new ProductRepository(context);
+
+                //Act
+                var exception = Assert.Throws<IndexOutOfRangeException>(() =>
+                  {
+                      productRepository.UpdateProductStocks(id, 15);
+                  });
+
+                //Assert
+                var result = context.Product.First();
+
+                Assert.Contains("Invalid id", exception.Message);
+                Assert.Equal(product.Quantity, result.Quantity);
+
+                context.Database.EnsureDeleted();
+            }
+        }
+
+        [Theory]
+        [InlineData(-5)]
+        [InlineData(0)]
+        [InlineData(50)]
+        public void TestUpdateProductStocksInvalidQuantityInMemoryTest(int quantity)
+        {
+            // Arrange
+            var product = new Product
+            {
+                Id = 1,
+                Name = "name",
+                Description = "description",
+                Price = 12.95,
+                Quantity = 40
+            };
+            var options = TestDBContextOptionsBuilder();
+            using (var context = new P3Referential(options))
+            {
+                context.Product.Add(product);
+                context.SaveChanges();
+
+                var productRepository = new ProductRepository(context);
+
+                //Act
+                var exception = Assert.Throws<InvalidOperationException>(() =>
+                {
+                    productRepository.UpdateProductStocks(1, quantity);
+                });
+
+                //Assert
+                var result = context.Product.First();
+
+                Assert.Contains("The quantity to remove should be within the number of products available", exception.Message);
+                Assert.Equal(product.Quantity, result.Quantity);
+                context.Database.EnsureDeleted();
+            }
         }
 
         [Fact]
@@ -234,8 +325,29 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
 
                 context.Database.EnsureDeleted();
             }
+        }
 
-            //worstcase = saving a null product
+        [Fact]
+        public void TestSaveNulProductInMemoryTest()
+        {
+            //Arrange
+            Product product = null;
+            var options = TestDBContextOptionsBuilder();
+            using (var context = new P3Referential(options))
+            {
+                var productRepository = new ProductRepository(context);
+
+                // Act
+                productRepository.SaveProduct(product);
+
+                // Assert
+                var result = context.Product.ToList();
+
+                Assert.Empty(result);
+                
+
+                context.Database.EnsureDeleted();
+            }
         }
 
         [Theory]
@@ -266,8 +378,34 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
 
                 context.Database.EnsureDeleted();
             }
+        }
 
-            //worst case = enting the wrong id
+        [Theory]
+        [InlineData(-5)]
+        [InlineData(0)]
+        [InlineData(26)]
+        public void TestDeleteProductInvalidIdInMemoryTestParametizedTestData(int id)
+        {
+            // Arrange
+            var options = TestDBContextOptionsBuilder();
+            SeedTestDb(options);
+
+            using (var context = new P3Referential(options))
+            {
+                var productRepository = new ProductRepository(context);
+                var product = context.Product.FirstOrDefault(p => p.Id == id);
+
+                // Act
+                var exception = Assert.Throws<IndexOutOfRangeException>(() =>
+                  {
+                      productRepository.DeleteProduct(id);
+                  });
+
+                //Assert
+                Assert.Contains("Invalid id", exception.Message);
+
+                context.Database.EnsureDeleted();
+            }
         }
     }
 }
