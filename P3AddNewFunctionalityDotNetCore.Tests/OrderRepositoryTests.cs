@@ -61,7 +61,7 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
         /// 
 
         [Fact]
-        public void TestSaveOrder()
+        public void TestSaveOrderInMemoryTest()
         {
             //Arrange
             var order = new Order { Id = 1, Name = "one", OrderLine = new List<OrderLine>() };
@@ -81,12 +81,32 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             }
         }
 
+        [Fact]
+        public void TestSaveNullOrderInMemoryTest()
+        {
+            //Arrange
+            Order order = null;
+            var options = TestDBContextOptionsBuilder();
+
+            using (var context = new P3Referential(options))
+            {
+                var orderRepository = new OrderRepository(context);
+
+                //Act
+                orderRepository.Save(order);
+
+                //Assert
+                var orders = context.Order.ToList();
+                Assert.Empty(orders);
+            }
+        }
+
         [Theory]
         [InlineData(1, "one")]
         [InlineData(2, "two")]
         [InlineData(3, "three")]
         [InlineData(4, "four")]
-        public async Task TestGetOrderByIdAsyncParametizedTestData(int id, string name)
+        public async Task TestGetOrderByIdAsyncInMemoryTestParametizedTestData(int id, string name)
         {
             //Arrange
             var options = TestDBContextOptionsBuilder();
@@ -106,6 +126,28 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             }
 
             //worst case, enter invalid id
+        }
+
+        [Theory]
+        [InlineData(-5)]
+        [InlineData(0)]
+        [InlineData(16)]
+        public async Task TestGetOrderByInvalidIdAsyncInMemoryTestParametizedTestData(int id)
+        {
+            //Arrange
+            var options = TestDBContextOptionsBuilder();
+            SeedTestDb(options);
+
+            using (var context = new P3Referential(options))
+            {
+                var orderRepository = new OrderRepository(context);
+
+                //Act
+                var result = await orderRepository.GetOrder(id);
+
+                //Assert
+                Assert.Null(result);
+            }
         }
 
         [Fact]

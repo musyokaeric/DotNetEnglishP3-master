@@ -17,8 +17,11 @@ namespace P3AddNewFunctionalityDotNetCore.Models.Repositories
 
         public void Save(Order order)
         {
-            _context.Order.Add(order);
-            _context.SaveChanges();
+            if (order != null)
+            {
+                _context.Order.Add(order);
+                _context.SaveChanges();
+            }
         }
 
         public async Task<Order> GetOrder(int? id)
