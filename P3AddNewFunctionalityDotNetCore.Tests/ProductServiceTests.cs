@@ -174,8 +174,35 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             Assert.NotNull(result);
             Assert.IsType<ProductViewModel>(result);
             Assert.Equal(name, result.Name);
+        }
 
-            //worst case, entering the wrong id, -2, 10
+        [Theory]
+        [InlineData(-5)]
+        [InlineData(0)]
+        [InlineData(-26)]
+        public void TestGetProductByInvalidIdViewModelMockTestParametizedTestData(int id)
+        {
+            // Aarrange
+            var products = new List<Product>
+            {
+                new Product{ Id = 1, Name = "one", Description = "oneDescription"},
+                new Product{ Id = 2, Name = "two", Description = "twoDescription"},
+                new Product{ Id = 3, Name = "three", Description = "threeDescription"},
+                new Product{ Id = 4, Name = "four", Description = "fourDescription"},
+                new Product{ Id = 5, Name = "five", Description = "fiveDescription"}
+            };
+            var moqProductRepository = new Mock<IProductRepository>();
+            moqProductRepository.Setup(x => x.GetAllProducts()).Returns(products);
+            var productService = new ProductService(null, moqProductRepository.Object, null, null);
+
+            // Act
+            var exception = Assert.Throws<IndexOutOfRangeException>(() =>
+            {
+                productService.GetProductByIdViewModel(id);
+            });
+
+            // Assert
+            Assert.Contains("Invalid id", exception.Message);
         }
 
         [Theory]
@@ -207,8 +234,35 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             Assert.NotNull(result);
             Assert.IsType<Product>(result);
             Assert.Equal(name, result.Name);
+        }
 
-            //worst case, entering the wrong id, -2, 10
+        [Theory]
+        [InlineData(-5)]
+        [InlineData(0)]
+        [InlineData(-26)]
+        public void TestGetProductByInvalidIdMockTestParametizedTestData(int id)
+        {
+            // Aarrange
+            var products = new List<Product>
+            {
+                new Product{ Id = 1, Name = "one", Description = "oneDescription"},
+                new Product{ Id = 2, Name = "two", Description = "twoDescription"},
+                new Product{ Id = 3, Name = "three", Description = "threeDescription"},
+                new Product{ Id = 4, Name = "four", Description = "fourDescription"},
+                new Product{ Id = 5, Name = "five", Description = "fiveDescription"}
+            };
+            var moqProductRepository = new Mock<IProductRepository>();
+            moqProductRepository.Setup(x => x.GetAllProducts()).Returns(products);
+            var productService = new ProductService(null, moqProductRepository.Object, null, null);
+
+            // Act
+            var exception = Assert.Throws<IndexOutOfRangeException>(() =>
+            {
+                productService.GetProductById(id);
+            });
+
+            // Assert
+            Assert.Contains("Invalid id", exception.Message);
         }
 
         [Theory]
@@ -238,8 +292,26 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             Assert.NotNull(result);
             Assert.IsType<Product>(result);
             Assert.Equal(name, result.Name);
+        }
 
-            //Question: worst case by entering the wrong id?
+        [Theory]
+        [InlineData(-5)]
+        [InlineData(0)]
+        [InlineData(26)]
+        public async Task TestGetProductByInvalidIdAsyncIntegrationTestParametizedTestData(int id)
+        {
+            // Aarrange
+            var productRepository = new ProductRepository(_context);
+            var productService = new ProductService(null, productRepository, null, null);
+
+            // Act
+            var exception = await Assert.ThrowsAsync<IndexOutOfRangeException>(async() =>
+            {
+                await productService.GetProduct(id);
+            });
+
+            // Assert
+            Assert.Contains("Invalid id", exception.Message);
         }
 
         [Fact]
@@ -297,6 +369,80 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             //worst case, quantity to remove is larger than the product quantity, its a negative
         }
 
+        [Theory]
+        [InlineData(21)]
+        [InlineData(30)]
+        [InlineData(25)]
+        public void TestUpdateProductInvalidQuantitiesInMemoryTestParametizedTestData(int quantity)
+        {
+            //Arrange
+            var product = new Product
+            {
+                Id = 1,
+                Name = "name",
+                Quantity = 20
+            };
+            var options = TestDBContextOptionsBuilder();
+            using (var context = new P3Referential(options))
+            {
+                context.Product.Add(product);
+                context.SaveChanges();
+
+                var cart = new Cart();
+                cart.AddItem(product, quantity);
+
+                var productRepository = new ProductRepository(context);
+                var productService = new ProductService(cart, productRepository, null, null);
+
+                //Act
+                var exception = Assert.Throws<InvalidOperationException>(() =>
+                  {
+                      productService.UpdateProductQuantities();
+                  });
+
+                //Assert
+                Assert.Contains("The quantity to remove should be within the number of products available", exception.Message);
+
+                context.Database.EnsureDeleted();
+            }
+        }
+
+        //[Theory]
+        //[InlineData(-5)]
+        //[InlineData(0)]
+        //public void TestUpdateProductQuantitiesLessThanZeroInMemoryTestParametizedTestData(int quantity)
+        //{
+        //    //Arrange
+        //    var product = new Product
+        //    {
+        //        Id = 1,
+        //        Name = "name",
+        //        Quantity = 20
+        //    };
+        //    var options = TestDBContextOptionsBuilder();
+        //    using (var context = new P3Referential(options))
+        //    {
+        //        context.Product.Add(product);
+        //        context.SaveChanges();
+
+        //        var cart = new Cart();
+        //        cart.AddItem(product, quantity);
+
+        //        var productRepository = new ProductRepository(context);
+        //        var productService = new ProductService(cart, productRepository, null, null);
+
+        //        //Act
+        //        var exception = Assert.Throws<ArgumentException>(() =>
+        //        {
+        //            productService.UpdateProductQuantities();
+        //        });
+
+        //        //Assert
+        //        Assert.Contains("The quantity must me more than zero", exception.Message);
+
+        //        context.Database.EnsureDeleted();
+        //    }
+        //}
         [Fact]
         public void TestCheckProductModelErrorsNonHappySenarioTest()
         {
@@ -369,9 +515,6 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
         [InlineData(5, "five", "fiveDescription", "fiveDetails", "50.00", "10")]
         public void TestSaveProductInMemoryTestParametizedTestData(int id, string name, string description, string details, string price, string stock)
         {
-            //takes ProductViewModel as arguments - parametized
-            //writes to productRepository = inmemory
-            //Arrange
             var productViewModel = new ProductViewModel
             {
                 Id = id,
@@ -397,17 +540,75 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
 
                 context.Database.EnsureDeleted();
             }
+        }
 
-            //worst case, saving null product, saving product with null properties
+        [Fact]
+        public void TestSaveNullProductInMemoryTestParametizedTestData()
+        {
+            ProductViewModel productViewModel = null;
+            var options = TestDBContextOptionsBuilder();
+            using (var context = new P3Referential(options))
+            {
+                var productRepository = new ProductRepository(context);
+                var productService = new ProductService(null, productRepository, null, null);
+
+                //Act
+                var excpetion = Assert.Throws<ArgumentNullException>(() =>
+                {
+                    productService.SaveProduct(productViewModel);
+                });
+
+                var result = context.Product.ToList();
+
+                //Assert
+                Assert.Empty(result);
+                Assert.Contains("Product should not be null", excpetion.Message);
+
+                context.Database.EnsureDeleted();
+            }
         }
 
         [Theory]
         [InlineData(1)]
         [InlineData(2)]
         [InlineData(3)]
-        [InlineData(4)]
-        [InlineData(5)]
         public void TestDeleteProductInMemoryTestParametizedDataTest(int id)
+        {
+            //Arrange
+            var options = TestDBContextOptionsBuilder();
+            SeedTestDb(options);
+
+            using (var context = new P3Referential(options))
+            {
+                var product1 = context.Product.FirstOrDefault(p => p.Id == 1);
+                var product2 = context.Product.FirstOrDefault(p => p.Id == 2);
+                var product3 = context.Product.FirstOrDefault(p => p.Id == 3);
+
+                var cart = new Cart();
+                cart.AddItem(product1, 1);
+                cart.AddItem(product2, 1);
+                cart.AddItem(product3, 1);
+
+                var productRepository = new ProductRepository(context);
+                var productService = new ProductService(cart, productRepository, null, null);
+
+                //Act
+                productService.DeleteProduct(id);
+
+                //Assert
+                var result = context.Product.ToList();
+                Assert.Equal(4, result.Count);
+                Assert.Equal(2, cart.Lines.Count());
+
+                context.Database.EnsureDeleted();
+            }
+        }
+
+        [Theory]
+        [InlineData(-5)]
+        [InlineData(0)]
+        [InlineData(26)]
+        public void TestDeleteProducInvalidIdtInMemoryTestParametizedDataTest(int id)
         {
             //Arrange
             var options = TestDBContextOptionsBuilder();
@@ -419,17 +620,18 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
                 var productService = new ProductService(null, productRepository, null, null);
 
                 //Act
-                productService.DeleteProduct(id);
+                var exception = Assert.Throws<IndexOutOfRangeException>(() =>
+                {
+                    productService.DeleteProduct(id);
+                });
 
                 //Assert
+                Assert.Contains("Invalid id", exception.Message);
                 var result = context.Product.ToList();
-                Assert.Equal(4, result.Count);
+                Assert.Equal(5, result.Count);
 
                 context.Database.EnsureDeleted();
             }
-
-            //worst case, entering the wrong id
-            //need to check on the cart scenario
         }
     }
 }

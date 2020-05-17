@@ -21,7 +21,7 @@ namespace P3AddNewFunctionalityDotNetCore.Models.Repositories
             var product = await _context.Product.SingleOrDefaultAsync(m => m.Id == id);
             if (product == null)
             {
-                throw new IndexOutOfRangeException("Invalid id requested...");
+                throw new IndexOutOfRangeException("Invalid id");
             }
             else
             {

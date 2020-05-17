@@ -60,20 +60,43 @@ namespace P3AddNewFunctionalityDotNetCore.Models.Services
         public ProductViewModel GetProductByIdViewModel(int id)
         {
             List<ProductViewModel> products = GetAllProductsViewModel().ToList();
-            return products.Find(p => p.Id == id);
+            var product =  products.Find(p => p.Id == id);
+            if (product == null)
+            {
+                throw new IndexOutOfRangeException("Invalid id");
+            }
+            else
+            {
+                return product;
+            }
         }
 
 
         public Product GetProductById(int id)
         {
             List<Product> products = GetAllProducts().ToList();
-            return products.Find(p => p.Id == id);
+            var product = products.Find(p => p.Id == id);
+            if (product == null)
+            {
+                throw new IndexOutOfRangeException("Invalid id");
+            }
+            else
+            {
+                return product;
+            }
         }
 
         public async Task<Product> GetProduct(int id)
         {
             var product = await _productRepository.GetProduct(id);
-            return product;
+            if (product == null)
+            {
+                throw new IndexOutOfRangeException("Invalid id");
+            }
+            else
+            {
+                return product;
+            }
         }
 
         public async Task<IList<Product>> GetProduct()
@@ -134,8 +157,15 @@ namespace P3AddNewFunctionalityDotNetCore.Models.Services
 
         public void SaveProduct(ProductViewModel product)
         {
-            var productToAdd = MapToProductEntity(product);
-            _productRepository.SaveProduct(productToAdd);
+            if (product != null)
+            {
+                var productToAdd = MapToProductEntity(product);
+                _productRepository.SaveProduct(productToAdd);
+            }
+            else
+            {
+                throw new ArgumentNullException("Product should not be null");
+            }
         }
 
         private static Product MapToProductEntity(ProductViewModel product)
@@ -153,10 +183,13 @@ namespace P3AddNewFunctionalityDotNetCore.Models.Services
 
         public void DeleteProduct(int id)
         {
-            // TODO what happens if a product has been added to a cart and has been later removed from the inventory ?
-            // delete the product form the cart by using the specific method
-            // => the choice is up to the student
-            //_cart.RemoveLine(GetProductById(id));
+            var product = GetProduct(id);
+            if (product == null)
+            {
+                throw new IndexOutOfRangeException("Invalid id");
+            }
+
+            _cart.RemoveLine(GetProductById(id));
 
             _productRepository.DeleteProduct(id);
         }
