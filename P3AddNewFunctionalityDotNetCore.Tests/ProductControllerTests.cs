@@ -303,5 +303,32 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             }
         }
 
+        [Theory]
+        [InlineData(-5)]
+        [InlineData(0)]
+        [InlineData(26)]
+        public void TestDeleteProductInvalidIdInMemoryTestParametizedTestData(int id)
+        {
+            //Arrange
+            var options = TestDBContextOptionsBuilder();
+            SeedTestDb(options);
+
+            using (var context = new P3Referential(options))
+            {
+                var productRepository = new ProductRepository(context);
+                var productService = new ProductService(null, productRepository, null, null);
+                var productController = new ProductController(productService, null);
+
+                //Act
+                var exception = Assert.Throws<IndexOutOfRangeException>(() =>
+                {
+                    productController.DeleteProduct(id);
+                });
+
+                //Assert
+                Assert.Contains("Invalid id", exception.Message);
+                Assert.Equal(5, context.Product.Count());
+            }
+        }
     }
 }
