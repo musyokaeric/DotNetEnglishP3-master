@@ -28,13 +28,50 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             //Act
             cart.AddItem(product1, 1);
             cart.AddItem(product2, 1);
-            cart.AddItem(product1, 1);
+            cart.AddItem(product1, 1); //add similar product
 
             //Assert
             Assert.NotEmpty(cart.Lines);
             Assert.Equal(2, cart.Lines.Count());
             Assert.Equal(2, cart.Lines.FirstOrDefault(c => c.Product.Id == 1).Quantity);
 
+        }
+
+        [Fact]
+        public void TestAddProductNegativeQuantity()
+        {
+            //Arrange
+            var product = new Product { Id = 1, Name = "one", Description = "oneDescription" };
+            var cart = new Cart();
+
+            //Act
+            var exception = Assert.Throws<ArgumentException>(() =>
+            {
+                cart.AddItem(product, -5);
+            });
+            
+
+            //Assert
+            Assert.Empty(cart.Lines);
+            Assert.Contains("The quantity must me more than zero", exception.Message);
+        }
+
+        [Fact]
+        public void TestAddNullProduct()
+        {
+            //Arrange
+            Product product = null;
+            var cart = new Cart();
+
+            //Act
+            var exception = Assert.Throws<ArgumentNullException>(() =>
+              {
+                  cart.AddItem(product, 2);
+              });
+
+            //Assert
+            Assert.Empty(cart.Lines);
+            Assert.Contains("The product should not be null", exception.Message);
         }
 
         [Fact]
@@ -76,7 +113,19 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             Assert.IsType<double>(result);
             Assert.Equal(expectedValue, result);
 
-            //worst case, quantity is zero
+        }
+
+        [Fact]
+        public void TestGetAvaerageValueWithNoAddedItem()
+        {
+            //Arrange
+            var cart = new Cart();
+
+            //Act
+            var result = cart.GetAverageValue();
+
+            //Assert
+            Assert.Equal(0, result);
         }
 
         [Fact]
