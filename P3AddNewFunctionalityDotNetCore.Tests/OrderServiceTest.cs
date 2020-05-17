@@ -105,6 +105,8 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
                 Assert.NotNull(result);
                 Assert.IsType<Order>(result);
                 Assert.Equal(name, result.Name);
+
+                context.Database.EnsureDeleted();
             }
         }
 
@@ -128,6 +130,8 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
 
                 //Assert
                 Assert.Null(result);
+
+                context.Database.EnsureDeleted();
             }
         }
 
@@ -210,6 +214,8 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
                 Assert.Equal(2, result.First().OrderLine.Count);
 
                 Assert.Equal(12, context.Product.FirstOrDefault(p => p.Id == 1).Quantity);
+
+                context.Database.EnsureDeleted();
             }
         }
     }

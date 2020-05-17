@@ -78,6 +78,8 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
                 var orders = context.Order.ToList();
                 Assert.Single(orders);
                 Assert.Equal("one", orders.First().Name);
+
+                context.Database.EnsureDeleted();
             }
         }
 
@@ -98,6 +100,8 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
                 //Assert
                 var orders = context.Order.ToList();
                 Assert.Empty(orders);
+
+                context.Database.EnsureDeleted();
             }
         }
 
@@ -123,9 +127,9 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
                 Assert.NotNull(result);
                 Assert.IsType<Order>(result);
                 Assert.Equal(name, result.Name);
-            }
 
-            //worst case, enter invalid id
+                context.Database.EnsureDeleted();
+            }
         }
 
         [Theory]
@@ -147,6 +151,8 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
 
                 //Assert
                 Assert.Null(result);
+
+                context.Database.EnsureDeleted();
             }
         }
 

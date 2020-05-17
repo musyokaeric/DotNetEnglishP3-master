@@ -229,6 +229,8 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
                 //Assert
                 var viewResult = Assert.IsType<RedirectToActionResult>(result);
                 Assert.Empty(cart.Lines);
+
+                context.Database.EnsureDeleted();
             }
 
         }

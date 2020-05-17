@@ -225,6 +225,8 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
                 Assert.NotEmpty(savedProduct);
                 Assert.Single(savedProduct);
                 Assert.Equal("Echo Dot", savedProduct.First().Name);
+
+                context.Database.EnsureDeleted();
             }
         }
 
@@ -267,6 +269,8 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
                 var savedProduct = context.Product.ToList();
 
                 Assert.Empty(savedProduct);
+
+                context.Database.EnsureDeleted();
             }
         }
 
@@ -300,6 +304,8 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
                 Assert.NotNull(reminingProducts);
                 Assert.Equal(4, reminingProducts.Count);
                 Assert.Null(reminingProducts.FirstOrDefault(p => p.Id == id));
+
+                context.Database.EnsureDeleted();
             }
         }
 
@@ -328,6 +334,8 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
                 //Assert
                 Assert.Contains("Invalid id", exception.Message);
                 Assert.Equal(5, context.Product.Count());
+
+                context.Database.EnsureDeleted();
             }
         }
     }
