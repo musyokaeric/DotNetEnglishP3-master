@@ -146,7 +146,7 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
               });
 
             //Assert
-            Assert.Contains("Invalid id requested...", exception.Result.Message);
+            Assert.Contains("Invalid id", exception.Result.Message);
         }
         [Fact]
         public async Task TestGetProductIntegrationTest()
