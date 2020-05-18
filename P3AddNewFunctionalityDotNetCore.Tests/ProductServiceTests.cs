@@ -407,42 +407,44 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             }
         }
 
-        //[Theory]
-        //[InlineData(-5)]
-        //[InlineData(0)]
-        //public void TestUpdateProductQuantitiesLessThanZeroInMemoryTestParametizedTestData(int quantity)
-        //{
-        //    //Arrange
-        //    var product = new Product
-        //    {
-        //        Id = 1,
-        //        Name = "name",
-        //        Quantity = 20
-        //    };
-        //    var options = TestDBContextOptionsBuilder();
-        //    using (var context = new P3Referential(options))
-        //    {
-        //        context.Product.Add(product);
-        //        context.SaveChanges();
+        [Theory]
+        [InlineData(-5)]
+        [InlineData(0)]
+        public void TestUpdateProductQuantitiesLessThanZeroInMemoryTestParametizedTestData(int quantity)
+        {
+            //Arrange
+            var product = new Product
+            {
+                Id = 1,
+                Name = "name",
+                Quantity = 20
+            };
+            var options = TestDBContextOptionsBuilder();
+            using (var context = new P3Referential(options))
+            {
+                context.Product.Add(product);
+                context.SaveChanges();
 
-        //        var cart = new Cart();
-        //        cart.AddItem(product, quantity);
+                var cart = new Cart();
 
-        //        var productRepository = new ProductRepository(context);
-        //        var productService = new ProductService(cart, productRepository, null, null);
+                var exception = Assert.Throws<ArgumentException>(() => //this takes care of the control set on cart.AddItem()
+                {
+                    cart.AddItem(product, quantity);
+                });
 
-        //        //Act
-        //        var exception = Assert.Throws<ArgumentException>(() =>
-        //        {
-        //            productService.UpdateProductQuantities();
-        //        });
+                var productRepository = new ProductRepository(context);
+                var productService = new ProductService(cart, productRepository, null, null);
 
-        //        //Assert
-        //        Assert.Contains("The quantity must me more than zero", exception.Message);
+                //Act
+                productService.UpdateProductQuantities();
 
-        //        context.Database.EnsureDeleted();
-        //    }
-        //}
+                //Assert
+                Assert.Empty(cart.Lines);
+                Assert.Contains("The quantity must me more than zero", exception.Message);
+
+                context.Database.EnsureDeleted();
+            }
+        }
         [Fact]
         public void TestCheckProductModelErrorsNonHappySenarioTest()
         {
@@ -464,7 +466,7 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             }
             var productService = new ProductService(null, null, null, moqStringLocaliser.Object);
 
-            //Act - missing stock
+            //Act - missing name
             var product = new ProductViewModel { Id = 1, Name = " ", Stock = "20", Price = "11.05" };
             var result = productService.CheckProductModelErrors(product);
 

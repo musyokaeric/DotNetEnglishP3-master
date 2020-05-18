@@ -183,13 +183,19 @@ namespace P3AddNewFunctionalityDotNetCore.Models.Services
 
         public void DeleteProduct(int id)
         {
-            var product = GetProduct(id);
+            var product = GetProductById(id);
             if (product == null)
             {
                 throw new IndexOutOfRangeException("Invalid id");
             }
 
-            _cart.RemoveLine(GetProductById(id));
+            Cart cart = (Cart)_cart;
+            var line = cart.Lines.FirstOrDefault(l => l.Product.Id == id);
+
+            if (line != null)
+            {
+                _cart.RemoveLine(GetProductById(id));
+            }
 
             _productRepository.DeleteProduct(id);
         }
