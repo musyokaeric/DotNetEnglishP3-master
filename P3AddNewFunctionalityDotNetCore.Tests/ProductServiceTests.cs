@@ -365,8 +365,6 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
 
                 context.Database.EnsureDeleted();
             }
-
-            //worst case, quantity to remove is larger than the product quantity, its a negative
         }
 
         [Theory]

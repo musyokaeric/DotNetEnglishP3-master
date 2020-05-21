@@ -289,7 +289,7 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
             using (var context = new P3Referential(options))
             {
                 var productRepository = new ProductRepository(context);
-                var productService = new ProductService(null, productRepository, null, null);
+                var productService = new ProductService(new Cart(), productRepository, null, null);
                 var productController = new ProductController(productService, null);
 
                 //Act

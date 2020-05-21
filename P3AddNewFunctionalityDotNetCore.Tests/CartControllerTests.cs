@@ -224,10 +224,13 @@ namespace P3AddNewFunctionalityDotNetCore.Tests
                 var cartController = new CartController(cart, productService);
 
                 //Act
-                var result = cartController.AddToCart(id);
+                Assert.Throws<IndexOutOfRangeException>(() =>
+                {
+                    var result = cartController.AddToCart(id);
 
-                //Assert
-                var viewResult = Assert.IsType<RedirectToActionResult>(result);
+                    //Assert
+                    var viewResult = Assert.IsType<RedirectToActionResult>(result);
+                });
                 Assert.Empty(cart.Lines);
 
                 context.Database.EnsureDeleted();
